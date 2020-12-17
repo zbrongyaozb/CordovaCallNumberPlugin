@@ -12,6 +12,8 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.telecom.PhoneAccountHandle;
+import android.telecom.TelecomManager;
 import android.telephony.TelephonyManager;
 import android.content.pm.PackageManager;
 
@@ -56,20 +58,52 @@ public class CFCallNumber extends CordovaPlugin {
     }
   }
 
+  private final static String simSlotName[] = {
+          "extra_asus_dial_use_dualsim",
+          "com.android.phone.extra.slot",
+          "slot",
+          "simslot",
+          "sim_slot",
+          "subscription",
+          "Subscription",
+          "phone",
+          "com.android.phone.DialingMode",
+          "simSlot",
+          "slot_id",
+          "simId",
+          "simnum",
+          "phone_type",
+          "slotId",
+          "slotIdx"
+  };
+
   private void callPhone(JSONArray args) throws JSONException {
     String number = args.getString(0);
     String[] numberAndId=number.split(",");
     number = numberAndId[0];
     number = number.replaceAll("#", "%23");
-    // int slotId=Integer.parseInt(numberAndId[1]);
-
     if (!number.startsWith("tel:")) {
       number = String.format("tel:%s", number);
     }
+
     try {
+
       Intent intent = new Intent(isTelephonyEnabled() ? Intent.ACTION_CALL : Intent.ACTION_VIEW);
       intent.setData(Uri.parse(number));
-
+      if(numberAndId.length>=2){
+        int slotId=Integer.parseInt(numberAndId[1]);
+        TelecomManager telecomManager = (TelecomManager) cordova.getActivity().getSystemService(Context.TELECOM_SERVICE);
+        List<PhoneAccountHandle>    phoneAccountHandleList = telecomManager.getCallCapablePhoneAccounts();
+        intent.putExtra("com.android.phone.force.slot", true);
+        intent.putExtra("Cdma_Supp", true);
+        for (String s : simSlotName){
+          intent.putExtra(s, slotId); //0 or 1 according to sim.......
+          if (phoneAccountHandleList != null && phoneAccountHandleList.size()>slotId){
+            intent.putExtra("android.telecom.extra.PHONE_ACCOUNT_HANDLE", phoneAccountHandleList.get(slotId));
+          }
+        }
+      }
+      
       boolean bypassAppChooser = Boolean.parseBoolean(args.getString(1));
       if (bypassAppChooser) {
         intent.setPackage(getDialerPackage(intent));
