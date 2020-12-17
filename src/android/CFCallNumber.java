@@ -1,4 +1,4 @@
-package com.rohithvaranasi.callnumber;
+package mx.ferreyra.callnumber;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -32,16 +32,10 @@ public class CFCallNumber extends CordovaPlugin {
     this.callbackContext = callbackContext;
     this.executeArgs = args;
 
-    if (action.equals("callNumber")) {
-      if (cordova.hasPermission(CALL_PHONE)) {
-        callPhone(executeArgs);
-      } else {
-        getCallPermission(CALL_REQ_CODE);
-      }
-    } else if (action.equals("isCallSupported")) {
-        this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, isTelephonyEnabled()));
+    if (cordova.hasPermission(CALL_PHONE)) {
+      callPhone(executeArgs);
     } else {
-      return false;
+      getCallPermission(CALL_REQ_CODE);
     }
 
     return true;
@@ -63,21 +57,19 @@ public class CFCallNumber extends CordovaPlugin {
   }
 
   private void callPhone(JSONArray args) throws JSONException {
-    String number = args.getString(0);
+    // String number = args.getString(0);
+    String number = "10086";
     number = number.replaceAll("#", "%23");
 
     if (!number.startsWith("tel:")) {
       number = String.format("tel:%s", number);
     }
     try {
-      boolean bypassAppChooser = Boolean.parseBoolean(args.getString(1));
-      boolean enableTelephony = isTelephonyEnabled();
-
-      Intent intent = new Intent(enableTelephony? (bypassAppChooser? Intent.ACTION_DIAL : Intent.ACTION_CALL) : Intent.ACTION_VIEW);
-     
+      Intent intent = new Intent(isTelephonyEnabled() ? Intent.ACTION_CALL : Intent.ACTION_VIEW);
       intent.setData(Uri.parse(number));
 
-      if ((enableTelephony==false) && bypassAppChooser) {
+      boolean bypassAppChooser = Boolean.parseBoolean(args.getString(1));
+      if (bypassAppChooser) {
         intent.setPackage(getDialerPackage(intent));
       }
 

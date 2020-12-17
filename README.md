@@ -5,15 +5,14 @@ Call a number directly from your cordova application.
 
 Install the plugin using:
 
-
-``` 
-npm install call-number
+``` java
+cordova plugin add https://github.com/Rohfosho/CordovaCallNumberPlugin.git
 ```
 
 or
 
-```
-yarn add call-number
+``` java
+npm install call-number
 ```
 
 Use the plugin in your JS file:
